@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-primary mb-3">
+            <div class="card-body">
+                <h4 class="text-primary">{{ visit.patient_name }}'s Profile</h4>
+                <p class="mb-0"><strong>Age:</strong> {{ visit.age }}</p>
+                <p class="mb-0"><strong>Presenting Today:</strong> {{ visit.symptoms }}</p>
+            </div>
+        </div>
+        
+        {% if history %}
+        <div class="card shadow-sm" style="max-height: 500px; overflow-y: auto;">
+            <div class="card-header bg-dark text-white sticky-top">
+                <h5 class="mb-0">Past Medical Records</h5>
+            </div>
+            <div class="card-body bg-light">
+                {% for h in history %}
+                    <div class="border-bottom border-secondary mb-3 pb-2">
+                        <h6 class="text-secondary">📅 Visit Date: {{ h.appointment_datetime|date:"M d, Y" }}</h6>
+                        <p class="mb-1"><span class="badge bg-danger text-white">Reported Symptoms:</span> {{ h.symptoms }}</p>
+                        
+                        {% if h.test_reports %}
+                        <div class="alert alert-warning py-1 px-2 mb-1" style="font-size: 0.9rem;">
+                            <strong>🔬 Lab Tests:</strong> {{ h.test_reports }}
+                        </div>
+                        {% endif %}
+                        
+                        <p class="mb-1"><strong>Doctor's Notes:</strong> {{ h.condition_notes }}</p>
+                        <p class="mb-0 text-success"><strong>Prescribed:</strong> {{ h.prescription }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+            <div class="alert alert-info">No previous health records found for this patient.</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <form method="POST" class="card p-4 shadow-sm border-success">
+            {% csrf_token %}
+            <h4 class="text-success border-bottom pb-2">Today's Consultation</h4>
+            
+            <label class="fw-bold mt-2">Condition Notes / Improvements:</label>
+            <textarea name="condition" class="form-control mb-3" rows="3" placeholder="e.g., Patient shows improvement, blood pressure is stable..." required></textarea>
+            
+            <label class="fw-bold">New Test Reports / Vitals:</label>
+            <textarea name="test_reports" class="form-control mb-3" rows="2" placeholder="e.g., Hemoglobin 52%, BP 120/80..."></textarea>
+            
+            <label class="fw-bold">Prescription / Treatments:</label>
+            <textarea name="prescription" class="form-control mb-4" rows="3" placeholder="e.g., Continue statins, schedule follow-up in 30 days..." required></textarea>
+            
+            <button type="submit" class="btn btn-success w-100 btn-lg shadow">Save & Complete Visit</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

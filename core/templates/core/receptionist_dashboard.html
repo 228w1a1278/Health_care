@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h2>Receptionist Dashboard</h2>
+
+{% if alerts %}
+<div class="alert alert-danger shadow">
+    <h4>⚠️ Action Required: Rejected Appointments</h4>
+    {% for alert in alerts %}
+    <p>Dr. {{ alert.doctor.username }} rejected {{ alert.patient_name }}.
+        <button class="btn btn-sm btn-warning"
+            onclick="reschedule('{{alert.id}}', '{{alert.patient_name}}', '{{alert.age}}', '{{alert.symptoms}}', '{{alert.doctor.id}}')">Reschedule</button>
+    </p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#apptModal">Add New Appointment</button>
+
+<table class="table table-bordered bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appt in appointments %}
+        <tr>
+            <td>{{ appt.patient_name }} ({{appt.age}})</td>
+            <td>Dr. {{ appt.doctor.username }}</td>
+            <td>{{ appt.appointment_datetime }}</td>
+            <td><strong>{{ appt.status }}</strong></td>
+            <td>
+                {% if appt.status == 'Completed' %}
+                <a href="{% url 'view_prescription' appt.id %}" target="_blank"
+                    class="btn btn-sm btn-info">View/Print</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="modal fade" id="apptModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5>Book / Reschedule</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="appointment_id" id="appt_id">
+                    <input type="text" name="patient_name" id="p_name" class="form-control mb-2"
+                        placeholder="Patient Name" required>
+                    <input type="number" name="age" id="p_age" class="form-control mb-2" placeholder="Age" required>
+                    <textarea name="symptoms" id="p_symp" class="form-control mb-2" placeholder="Symptoms"
+                        required></textarea>
+
+                    <select name="doctor_id" id="doctor_select" class="form-control mb-2" required>
+                        <option value="">Select Doctor...</option>
+                        {% for doc in doctors %}<option value="{{ doc.id }}">Dr. {{ doc.username }}</option>{% endfor %}
+                    </select>
+
+                    <input type="datetime-local" name="datetime" class="form-control mb-2" required>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary">Save Appointment</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function reschedule(id, name, age, symp, rejectedDocId) {
+        // 1. Auto-fill the inputs
+        document.getElementById('appt_id').value = id;
+        document.getElementById('p_name').value = name;
+        document.getElementById('p_age').value = age;
+        document.getElementById('p_symp').value = symp;
+
+        // 2. The Smart Filter: Hide the rejecting doctor
+        let docDropdown = document.getElementById('doctor_select');
+
+        for (let i = 0; i < docDropdown.options.length; i++) {
+            let option = docDropdown.options[i];
+
+            // Reset all options to be visible first (in case of multiple reschedules)
+            option.disabled = false;
+            option.style.display = 'block';
+
+            // If the option matches the doctor who rejected, hide it
+            if (option.value === rejectedDocId) {
+                option.disabled = true;
+                option.style.display = 'none';
+            }
+        }
+
+        // Reset the dropdown selection to default
+        docDropdown.value = "";
+
+        // 3. Open the Modal
+        var myModal = new bootstrap.Modal(document.getElementById('apptModal'));
+        myModal.show();
+    }
+</script>
+{% endblock %}

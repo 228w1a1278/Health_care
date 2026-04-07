@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h2>Doctor Dashboard</h2>
+<table class="table table-bordered bg-white shadow-sm mt-3">
+    <thead class="table-dark"><tr><th>Patient</th><th>Symptoms</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for appt in patients %}
+        <tr>
+            <td>{{ appt.patient_name }} ({{appt.age}})</td>
+            <td>{{ appt.symptoms }}</td>
+            <td>{{ appt.appointment_datetime }}</td>
+            <td><strong>{{ appt.status }}</strong></td>
+            <td>
+                {% if appt.status == 'Pending' %}
+                    <a href="{% url 'update_status' appt.id 'Accepted' %}" class="btn btn-sm btn-success">Accept</a>
+                    <a href="{% url 'update_status' appt.id 'Rejected' %}" class="btn btn-sm btn-danger">Reject</a>
+                {% elif appt.status == 'Accepted' %}
+                    <a href="{% url 'write_prescription' appt.id %}" class="btn btn-sm btn-primary">Write Prescription</a>
+                    <a href="{% url 'update_status' appt.id 'Cancelled' %}" class="btn btn-sm btn-secondary">Mark No-Show</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
